@@ -55,9 +55,10 @@ func roatDouble(root *rbNode, dir int) *rbNode {
 //递归方法
 func insert(root *rbNode, n BinaryNode) *rbNode {
 	if root == nil {
-		logger.Println("insert a new node")
+		logger.Println("insert a new node", n)
 		root = new(rbNode)
 		root.ele = n
+		root.red = true
 		//新结点本身不调整.
 	} else {
 		var dir int
@@ -74,6 +75,7 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 		var dir_ = (dir + 1) % 2
 		if isRed(root.child[dir]) {
 			if isRed(root.child[dir_]) {
+				fmt.Println("change color")
 				//case 1:
 				//if 2 children are red,
 				//1 and 3 can not be both red,so 2 must be black.
@@ -91,6 +93,7 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 				root.child[dir_].red = false
 			} else {
 				if isRed(root.child[dir].child[dir]) {
+					fmt.Println("single")
 					//case 2:
 					//if left child is red and left.left child is red too.
 					//
@@ -101,8 +104,9 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 					//|                          |
 					//R_0                        B_3
 					root = roat(root, dir_)
+					//旋转以后root指向B_1,root结点就是指向根节点的指针,这样就省去了父亲节点.
 				} else if isRed(root.child[dir].child[dir_]) {
-
+					fmt.Println("double")
 					root = roatDouble(root, dir_)
 				}
 			}
@@ -134,21 +138,32 @@ func (t *RBtree) Insert(n BinaryNode) {
 	//只有其中一个是,不然在这之前就已经存在红色冲突了
 	return
 }
+
+var output string
+
 func (t *RBtree) Walk() {
+	output = ""
 	var depth = 0
+	fmt.Println("tree:")
+	output += fmt.Sprintln("tree:")
 	walk(t.root, depth)
 }
+
 func walk(root *rbNode, depth int) {
 	var f = func(n *rbNode, depth int) {
 		for i := 0; i < depth; i++ {
-			fmt.Print("*")
+			fmt.Print("\t")
+			output += fmt.Sprint("\t")
 		}
 		if n.red {
-			fmt.Print("R_")
+			fmt.Print("->R_")
+			output += fmt.Sprint("->R_")
 		} else {
-			fmt.Print("B_")
+			fmt.Print("->B_")
+			output += fmt.Sprint("->B_")
 		}
 		fmt.Println(n.ele)
+		output += fmt.Sprintln(n.ele)
 	}
 	if root != nil {
 		depth++

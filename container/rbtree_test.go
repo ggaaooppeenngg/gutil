@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/ggaaooppeenngg/cpic"
 )
 
 //reb black tree asset
@@ -57,11 +59,22 @@ func TestTree(t *testing.T) {
 	tree.Insert(Int(1))
 	tree.Insert(Int(2))
 	tree.Insert(Int(3))
+	tree.Insert(Int(4))
+	tree.Insert(Int(5))
+	tree.Insert(Int(6))
+	tree.Insert(Int(7))
+	tree.Insert(Int(8))
 	var errors []string
 	rbTreeAsset(errors)(tree.root)
 	if len(errors) > 0 {
 		t.Fatal(strings.Join(errors, "\n"))
 	}
 	tree.Walk()
+	o, err := cpic.Gen(output)
+	if err != nil {
+		t.Fatal(err)
+	} else {
+		println(o)
+	}
 
 }
