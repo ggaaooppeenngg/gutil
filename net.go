@@ -12,7 +12,7 @@ var (
 )
 
 func init() {
-	//20 秒连接, 5 秒IO时间
+	//default 20s for connecting,5 for I/O.
 	client = clientConstructor(20, 25)
 }
 
@@ -34,6 +34,7 @@ func clientConstructor(connectTimeOut int, totalTimeOut int) *http.Client {
 	}
 }
 
+//Get gets url and returns response as []byte,using default client.
 func Get(url string) ([]byte, error) {
 	res, err := client.Get(url)
 	if err != nil {
