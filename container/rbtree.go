@@ -3,9 +3,9 @@ package container //import "github.com/ggaaooppeenngg/util/container"
 //insipred by this article http://www.eternallyconfuzzled.com/tuts/datastructures/jsw_tut_rbtree.aspx
 
 import (
+	"bytes"
 	"fmt"
 	"log"
-	"os"
 )
 
 type RBtree struct {
@@ -29,20 +29,21 @@ func NewRBtree() *RBtree {
 }
 
 var logger *log.Logger
+var logBuf bytes.Buffer
 
 func init() {
-	logger = log.New(os.Stdout, "^_^:", log.LstdFlags)
+	logger = log.New(&logBuf, "^_^:", log.LstdFlags)
 }
 
 //单旋转
 func roat(root *rbNode, dir int) *rbNode {
-	dir_ := (dir + 1) % 2
+	dir_ := (dir + 1) % 2 //reverse direction
 	x := root.child[dir_]
 	root.child[dir_] = x.child[dir]
 	x.child[dir] = root
 	root.red = true
 	x.red = false
-	return x
+	return x //root = x
 }
 
 //双旋转
@@ -66,17 +67,20 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 			logger.Println("search right")
 			dir = right
 		} else {
-			logger.Println("search left")
-			dir = left
+			if n.Less(root.ele) {
+				logger.Println("search left")
+				dir = left
+			} else {
+				return root
+			}
 		}
 		root.child[dir] = insert(root.child[dir], n)
 		//begin to fix up
-		//pic is assuming dir is left
 		var dir_ = (dir + 1) % 2
 		if isRed(root.child[dir]) {
 			if isRed(root.child[dir_]) {
-				fmt.Println("change color")
-				//case 1:
+				logger.Println("change color")
+				//case 1:(assuming dir is left)
 				//if 2 children are red,
 				//1 and 3 can not be both red,so 2 must be black.
 				//and red violation will propogate up.
@@ -88,13 +92,15 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 				//|                              |
 				//R_0                            R_0
 
+				//change colors
 				root.red = true
 				root.child[dir].red = false
 				root.child[dir_].red = false
+
 			} else {
 				if isRed(root.child[dir].child[dir]) {
-					fmt.Println("single")
-					//case 2:
+					logger.Println("single")
+					//case 2:(assuming dir is left)
 					//if left child is red and left.left child is red too.
 					//
 					//TREE   	             TREE
@@ -104,9 +110,8 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 					//|                          |
 					//R_0                        B_3
 					root = roat(root, dir_)
-					//旋转以后root指向B_1,root结点就是指向根节点的指针,这样就省去了父亲节点.
 				} else if isRed(root.child[dir].child[dir_]) {
-					fmt.Println("double")
+					logger.Println("double")
 					root = roatDouble(root, dir_)
 				}
 			}
@@ -144,57 +149,42 @@ var output string
 func (t *RBtree) Walk() {
 	output = ""
 	var depth = 0
-	fmt.Println("tree:")
 	output += fmt.Sprintln("tree:")
-	walk(t.root, depth)
+	walk(t.root, depth, left)
 }
 
-func walk(root *rbNode, depth int) {
-	var f = func(n *rbNode, depth int) {
+func walk(root *rbNode, depth int, dir int) {
+	var f = func(n *rbNode, depth int, dir int) {
 		for i := 0; i < depth; i++ {
-			fmt.Print("\t")
 			output += fmt.Sprint("\t")
 		}
 		if n.red {
-			fmt.Print("->R_")
-			output += fmt.Sprint("->R_")
+			var d string
+			if dir == left {
+				d = "L"
+			} else {
+				d = "R"
+			}
+			output += fmt.Sprint("->R_" + d)
 		} else {
-			fmt.Print("->B_")
-			output += fmt.Sprint("->B_")
+			var d string
+			if dir == left {
+				d = "L"
+			} else {
+				d = "R"
+			}
+			output += fmt.Sprint("->B_" + d)
 		}
-		fmt.Println(n.ele)
 		output += fmt.Sprintln(n.ele)
 	}
 	if root != nil {
 		depth++
-		f(root, depth)
+		f(root, depth, dir)
 		if root.child[left] != nil {
-			walk(root.child[left], depth)
+			walk(root.child[left], depth, left)
 		}
 		if root.child[right] != nil {
-			walk(root.child[right], depth)
-		}
-	}
-}
-
-func (t *RBtree) Print() {
-	var depth = 0
-	print(t.root, depth)
-}
-
-func print(n *rbNode, depth int) {
-	if n != nil {
-		depth++
-		if isRed(n) {
-			for i := 0; i < depth; i++ {
-				fmt.Print("*")
-			}
-			fmt.Println("red_node")
-		} else {
-			for i := 0; i < depth; i++ {
-				fmt.Print("*")
-			}
-			fmt.Println("black_node")
+			walk(root.child[right], depth, right)
 		}
 	}
 }
