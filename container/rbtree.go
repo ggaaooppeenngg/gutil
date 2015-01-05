@@ -111,6 +111,7 @@ func insert(root *rbNode, n BinaryNode) *rbNode {
 					//R_0                        B_3
 					root = roat(root, dir_)
 				} else if isRed(root.child[dir].child[dir_]) {
+					//
 					logger.Println("double")
 					root = roatDouble(root, dir_)
 				}

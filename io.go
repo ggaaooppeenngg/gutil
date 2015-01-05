@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"reflect"
 )
 
 //Pwd retruns current working directory path as string.
@@ -46,4 +47,23 @@ func CopyFile(filePath string, reader io.Reader) (int64, error) {
 	}
 	defer fw.Close()
 	return io.Copy(fw, reader)
+}
+
+//DeleteIndexOf deletes a element in a slice at index of i
+func DeleteIndexOf(i int, slc interface{}) {
+	sliceP := reflect.ValueOf(slc)
+	slice := sliceP.Elem()
+	if i >= slice.Len()-1 {
+		s1 := slice.Slice(0, i)
+		reflect.Copy(slice, s1)
+		slice.SetLen(slice.Len() - 1)
+	} else if i >= 0 {
+		s1 := slice.Slice(0, i)
+		s2 := slice.Slice(i+1, slice.Len())
+		s3 := reflect.AppendSlice(s1, s2)
+		reflect.Copy(slice, s3)
+		//need addressable value
+		slice.SetLen(slice.Len() - 1)
+	}
+
 }
