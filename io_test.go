@@ -32,6 +32,18 @@ func sliceIntEqual(s1, s2 []int) bool {
 	return true
 }
 
+func TestIndexOf(t *testing.T) {
+	var slice = []int{0, 1, 2}
+	if IndexOf(0, slice) != 0 {
+		t.Fatal("IndexOf failed,get index", IndexOf(0, slice))
+	}
+	type Int int
+	var sliceI = []Int{Int(0), Int(1), Int(2)}
+	if IndexOf(Int(0), sliceI) != 0 {
+		t.Fatal("IndexOf failed,get index", IndexOf(Int(0), sliceI))
+	}
+}
+
 func TestDeleteIndexOf(t *testing.T) {
 	var slice = []int{0, 1, 2, 3}
 	DeleteIndexOf(0, &slice)

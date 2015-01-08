@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -49,6 +50,39 @@ func CopyFile(filePath string, reader io.Reader) (int64, error) {
 	return io.Copy(fw, reader)
 }
 
+//不清楚原理
+func ObjectsAreEqual(a, b interface{}) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false
+	}
+
+	if reflect.DeepEqual(a, b) {
+		return true
+	}
+
+	if reflect.ValueOf(a) == reflect.ValueOf(b) {
+		return true
+	}
+
+	if fmt.Sprintf("%#v", a) == fmt.Sprintf("%#v", b) {
+		return true
+	}
+
+	return false
+}
+
+//IndexOf returns the ele index of slice slc,it not ele not exists return -1
+func IndexOf(ele interface{}, slc interface{}) int {
+	slice := reflect.ValueOf(slc)
+	for i := 0; i < slice.Len(); i++ {
+		itfc := slice.Index(i).Interface()
+		if reflect.DeepEqual(ele, itfc) {
+			return i
+		}
+	}
+	return -1
+}
+
 //DeleteIndexOf deletes a element in a slice at index of i
 func DeleteIndexOf(i int, slc interface{}) {
 	sliceP := reflect.ValueOf(slc)
@@ -65,5 +99,4 @@ func DeleteIndexOf(i int, slc interface{}) {
 		//need addressable value
 		slice.SetLen(slice.Len() - 1)
 	}
-
 }
