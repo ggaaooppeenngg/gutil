@@ -248,3 +248,12 @@ func (g Graph) OutBound(vtx *Vertex) []*Vertex {
 	}
 	return outbound
 }
+
+//InBound returns the inboud verticies for vtx
+func (g Graph) InBound(vtx *Vertex) []*Vertex {
+	var inbound []*Vertex
+	for _, e := range g.edgeTo[vtx] {
+		inbound = append(inbound, e.vtx)
+	}
+	return inbound
+}
