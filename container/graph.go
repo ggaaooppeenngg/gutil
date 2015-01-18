@@ -47,8 +47,8 @@ func newVertext(id string) *Vertex {
 
 //edge from or to vtx.
 type edge struct {
-	vtx    *Vertex //source or destination
-	weight float64 //default 0
+	vtx    *Vertex  //source or destination
+	weight *float64 //default nil, because default folat64!=0
 }
 
 //for debug
@@ -57,7 +57,7 @@ func (g Graph) String() string {
 	for _, vtx := range g.Vertices {
 		output += fmt.Sprintf("[%s]:\n", vtx.Id)
 		for _, edge := range g.edgeFrom[vtx] {
-			output += fmt.Sprintf("-> %f %s\n", edge.weight, edge.vtx.Id)
+			output += fmt.Sprintf("-> %f %s\n", *edge.weight, edge.vtx.Id)
 		}
 	}
 	return output
@@ -124,20 +124,29 @@ func (g Graph) FindVertexById(id string) *Vertex {
 	return nil
 }
 
-func (g *Graph) Connect(src, dst *Vertex, weight float64) {
+func (g *Graph) Connect(src, dst *Vertex, weights ...float64) {
+	if len(weights) > 1 {
+		log.Printf("only one weight allowed")
+		return
+	}
+	var weight *float64
+	if len(weights) == 1 {
+		weight = new(float64)
+		*weight = weights[0]
+	}
 	err := g.AddVertex(src)
 	if err != nil {
-		log.Printf("'%s' was previously added to graph\n", src.Id)
+		//log.Printf("'%s' was previously added to graph\n", src.Id)
 		src = g.FindVertexById(src.Id)
 	} else {
-		log.Printf("'%s' is added to graph\n", src.Id)
+		//log.Printf("'%s' is added to graph\n", src.Id)
 	}
 	err = g.AddVertex(dst)
 	if err != nil {
-		log.Printf("'%s' was previously added to graph\n", dst.Id)
+		//log.Printf("'%s' was previously added to graph\n", dst.Id)
 		dst = g.FindVertexById(dst.Id)
 	} else {
-		log.Printf("'%s' is added to graph\n", dst.Id)
+		//log.Printf("'%s' is added to graph\n", dst.Id)
 	}
 	edgeSrc := &edge{
 		vtx:    src,
@@ -157,7 +166,10 @@ func (g *Graph) Connect(src, dst *Vertex, weight float64) {
 			if edge.vtx == dst {
 				log.Println("Duplicate(Parallel) Edge Found. Overwriting the Weight value.")
 				log.Printf("%v --> %v + %v\n", edge.weight, edge.weight, weight)
-				edge.weight += weight
+				if edge.weight == nil {
+					edge.weight = new(float64)
+				}
+				*edge.weight += *weight
 				isDuplicate = true
 				break
 			}
@@ -174,7 +186,10 @@ func (g *Graph) Connect(src, dst *Vertex, weight float64) {
 			if edge.vtx == src {
 				log.Println("Duplicate(Parallel) Edge Found. Overwriting the Weight value.")
 				log.Printf("%v --> %v + %v\n", edge.weight, edge.weight, weight)
-				edge.weight += weight
+				if edge.weight == nil {
+					edge.weight = new(float64)
+				}
+				*edge.weight += *weight
 				isDuplicate = true
 				break
 			}
@@ -229,7 +244,7 @@ func (g Graph) EdgeExists(src, dst *Vertex) bool {
 }
 
 //getEdgeWeight returns weight value of an edge from src to dst.
-func (g Graph) GetEdgeWeight(src, dst *Vertex) float64 {
+func (g Graph) GetEdgeWeight(src, dst *Vertex) *float64 {
 	defer g.Unlock()
 	g.Lock()
 	for _, edge := range g.edgeFrom[src] {
@@ -237,7 +252,7 @@ func (g Graph) GetEdgeWeight(src, dst *Vertex) float64 {
 			return edge.weight
 		}
 	}
-	return 0.0
+	return nil
 }
 
 //OutBound returns the outbound verticies for vtx
