@@ -36,7 +36,8 @@ func (p *Path) HasPathTo(d *Vertex) bool {
 //NewUndiGraph returns an empty undirected graph
 func NewUndiGraph() *UndiGraph {
 	g := &UndiGraph{
-		Edges: make(map[*Vertex][]*edge),
+		Edges:      make(map[*Vertex][]*edge),
+		verticesId: make(map[string]bool),
 	}
 	return g
 }
@@ -50,6 +51,19 @@ func (g *UndiGraph) GetVertexById(id string) *Vertex {
 		}
 	}
 	return nil
+}
+
+func (g *UndiGraph) String() string {
+	var output string
+	for _, v := range g.Vertices {
+		edeges := g.Adj(v)
+		output += v.Id + " ->"
+		for _, edge := range edeges {
+			output += " " + edge.vtx.Id
+		}
+		output += "\n"
+	}
+	return output
 }
 
 //AddVertex adds v to graph if duplicate return error
@@ -169,6 +183,7 @@ func (g *UndiGraph) GetPathDFS(s *Vertex) *Path {
 }
 
 //GetPathBFS returns the path from s in BFS.
+//1 This Path is the shortest path if the weights are all the same.
 func (g *UndiGraph) GetPathBFS(s *Vertex) *Path {
 	var (
 		tmp    *edge
@@ -183,7 +198,16 @@ func (g *UndiGraph) GetPathBFS(s *Vertex) *Path {
 	return &Path{s, edgeTo}
 }
 
+//proof:
+//因为队列当中的分布是这样的 [k|k+1],队列里面前段是离s为k的结点,后段是离s为k+1的结点,k大于0(k指的是边数).
+//那么对于一个结点v来说,当它进入这个队列的时候,之前都没有扫描到它,也就是说,它没有出现在路径小于等于k的地方.
+//那么v出现在了k+1的地方,在这之后v不会出现在k+2,k+3这样的距离上了.
+//通俗的讲,当v入队的时候,之前没有遍历到v,也就是说之前的k层距离遍历的点内都没有v,那么现在有v了,说明这个距离就是最短距离,
+//另外在之后更长的距离上也不会看到v了.
+
 //dfs implements recursive DFS search method.
+//Time complex is O(V+E).
+//一般是和这个图的度成比例.
 func dfs(g *UndiGraph, s *Vertex, count *int, marked map[*Vertex]bool, walk func(v *Vertex)) {
 	marked[s] = true
 	if walk != nil {
@@ -234,4 +258,36 @@ func bfs(g *UndiGraph, s *Vertex, walk func(v *Vertex)) int {
 		}
 	}
 	return count
+}
+
+func (g *UndiGraph) CC() {
+
+}
+
+//CC is Connected Componentes used to divide vertices into connected components(equivalent classes).
+type CC struct {
+	id map[*Vertex]int //equivalent classes id.
+}
+
+//Divide divides vertices into connected components.
+func (cc *CC) Divide(g *UndiGraph) {
+	if len(g.Vertices) == 0 {
+		return
+	}
+	count := 0
+	marked := make(map[*Vertex]bool)
+	walk := func(v *Vertex) {
+		cc.id[v] = count
+	}
+	for _, v := range g.Vertices {
+		if !marked[v] {
+			dfs(g, v, nil, marked, walk)
+			count++
+		}
+	}
+}
+
+//Connected returns true if v and w are connected else false.
+func (cc *CC) Connected(v, w *Vertex) bool {
+	return cc.id[v] == cc.id[w]
 }

@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/ggaaooppeenngg/cpic"
 )
 
 //reb black tree asset
@@ -91,10 +89,6 @@ func TestRandom(t *testing.T) {
 		var errors []string
 		errors = asst(tree.root)
 		tree.Walk()
-		_, err := cpic.Gen(output)
-		if err != nil {
-			t.Fatal(err)
-		}
 		if len(errors) > 0 {
 			t.Fatal(strings.Join(errors, "\n"))
 		}
