@@ -156,6 +156,60 @@ func (g *UndiGraph) Adj(v *Vertex) (edges []*edge) {
 	return
 }
 
+//HasCycle detects cycle,returns false if g is acylic,else true.
+//assuming no self-loops or parral edges.
+func (g *UndiGraph) HasCycle() bool {
+	var (
+		marked   = make(map[*Vertex]bool)
+		prev     *Vertex
+		hasCycle bool
+	)
+	if len(g.Vertices) == 0 {
+		return true
+	}
+	s := g.Vertices[0]
+	dfs(g, s, nil, marked, func(v *Vertex) {
+		edges := g.Adj(v)
+		for _, edge := range edges {
+			//如果指向了一个marked果的结点,并且这个结点不是v的前驱,说明v连接到了之前的点上.
+			//也就是说成环
+			if marked[edge.vtx] {
+				if edge.vtx != prev {
+					hasCycle = true
+				}
+			}
+		}
+		prev = v
+	})
+	return hasCycle
+}
+
+//IsBipartite returns true if g is bipartite else returns false.
+func (g *UndiGraph) IsBipartite() bool {
+	var (
+		marked = make(map[*Vertex]bool)
+		color  = make(map[*Vertex]bool)
+		ok     bool
+	)
+	if len(g.Vertices) == 0 {
+		return true
+	}
+	s := g.Vertices[0]
+	dfs(g, s, nil, marked, func(v *Vertex) {
+		for _, edge := range g.Adj(v) {
+			//遍历的时候间隔标志颜色
+			color[edge.vtx] = !color[v]
+			//如果之前的点中颜色一样说明不能分成两个等价类.
+			if marked[edge.vtx] {
+				if color[edge.vtx] == color[v] {
+					ok = false
+				}
+			}
+		}
+	})
+	return ok
+}
+
 //DFS is depth first search,it returns vertices that counts.
 func (g *UndiGraph) DFS(s *Vertex) int {
 	var (
@@ -260,8 +314,9 @@ func bfs(g *UndiGraph, s *Vertex, walk func(v *Vertex)) int {
 	return count
 }
 
-func (g *UndiGraph) CC() {
-
+//CC returns Connected Components,if g is empty,returns nil.
+func (g *UndiGraph) CC() (cc *CC) {
+	return g.divide()
 }
 
 //CC is Connected Componentes used to divide vertices into connected components(equivalent classes).
@@ -269,10 +324,16 @@ type CC struct {
 	id map[*Vertex]int //equivalent classes id.
 }
 
+//Connected returns true if v and w are connected else false.
+func (cc *CC) Connected(v, w *Vertex) bool {
+	return cc.id[v] == cc.id[w]
+}
+
 //Divide divides vertices into connected components.
-func (cc *CC) Divide(g *UndiGraph) {
+func (g *UndiGraph) divide() *CC {
+	cc := &CC{make(map[*Vertex]int)}
 	if len(g.Vertices) == 0 {
-		return
+		return nil
 	}
 	count := 0
 	marked := make(map[*Vertex]bool)
@@ -285,9 +346,5 @@ func (cc *CC) Divide(g *UndiGraph) {
 			count++
 		}
 	}
-}
-
-//Connected returns true if v and w are connected else false.
-func (cc *CC) Connected(v, w *Vertex) bool {
-	return cc.id[v] == cc.id[w]
+	return cc
 }

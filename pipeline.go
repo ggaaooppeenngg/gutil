@@ -14,16 +14,22 @@ import (
 
 //1.  每一步关闭输出通道,当所有发送动作完成的时候.
 //2.  接受输入的通道的内容直到通道关闭.
-//需要注意的地方
-//一个channel,每个工作者拿来range,等range结束就可以关闭输出,但是产生多个channel还要来合并.
+
+//构造方法
+// 每个阶段关闭输出通道,当发送操作完成的时候.
+// 每个阶段不断接受输入通道的值,直到这些通道关闭,或者发送没有阻塞(也就是可以从done里读东西,或者可以从errc里面读东西)
+
+//有两种,一种是fan-int,多个channel合并到一个,一种是fan-out,一个channel输出到多个.
 
 //还有一种是一个channel开n个goroutine共享,用waitGroup.wait在一个goroutine里面等待关闭输出.
-
 //最主要的关键是接受输入直到关闭,产生输出之后close通道.
 
 //最后一个是显示关闭,就是用select防止一些发送者发不出去导致goroutine leak的情况,
-
 //在range里面加一个select{case <-done:return},然后关闭对应的输出.
+
+//错误处理,对于每个阶段的单利error和消息绑定成新的结构出输出下去.
+//对于这个阶段的整体错误,给出一个error通道来接受.
+//下个阶段得到任意的error都直接return导致,输出关闭或者是引起done关闭.
 
 type pf func(inputs chan interface{}) chan interface{}
 
