@@ -35,11 +35,10 @@ func (p *Path) HasPathTo(d *Vertex) bool {
 
 //NewUndiGraph returns an empty undirected graph
 func NewUndiGraph() *UndiGraph {
-	g := &UndiGraph{
+	return &UndiGraph{
 		Edges:      make(map[*Vertex][]*edge),
 		verticesId: make(map[string]bool),
 	}
-	return g
 }
 
 //TODO:optimize search method.
@@ -56,9 +55,12 @@ func (g *UndiGraph) GetVertexById(id string) *Vertex {
 func (g *UndiGraph) String() string {
 	var output string
 	for _, v := range g.Vertices {
-		edeges := g.Adj(v)
+		edges := g.Adj(v)
+		if len(edges) == 0 {
+			break
+		}
 		output += v.Id + " ->"
-		for _, edge := range edeges {
+		for _, edge := range edges {
 			output += " " + edge.vtx.Id
 		}
 		output += "\n"
@@ -105,7 +107,7 @@ func (g *UndiGraph) AddEdge(v *Vertex, w *Vertex, weights ...float64) error {
 	}
 
 	g.sync.Lock()
-
+	defer g.sync.Unlock()
 	//v add edge v-w
 	e = &edge{w, weight}
 	if _, ok := g.Edges[v]; !ok {
@@ -125,9 +127,6 @@ func (g *UndiGraph) AddEdge(v *Vertex, w *Vertex, weights ...float64) error {
 		edges = append(edges, e)
 		g.Edges[w] = edges
 	}
-
-	g.sync.Unlock()
-
 	g.E++
 	return nil
 }
