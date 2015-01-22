@@ -4,6 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/ggaaooppeenngg/util"
+)
+
+type Order uint
+
+const (
+	PRE  Order = 1 << iota //preorder
+	POST                   //postorder
+	REV                    //reverse order
 )
 
 //DiGraph is the representation fo directed graph.
@@ -53,9 +63,6 @@ func (g *DiGraph) String() string {
 	var output string
 	for _, v := range g.Vertices {
 		edges := g.Adj(v)
-		if len(edges) == 0 {
-			break
-		}
 		output += v.Id + " ->"
 		for _, edge := range edges {
 			output += " " + edge.vtx.Id
@@ -124,33 +131,88 @@ func (g *DiGraph) DirectedDFS(sources []*Vertex) {
 		marked = make(map[*Vertex]bool)
 	)
 	for _, s := range sources {
-		g.dfs(s, nil, marked, nil)
+		g.dfs(s, nil, marked, nil, nil)
 	}
+}
+
+//DFSInOrder 按照order的顺序返回DFS遍历结果.
+func (g *DiGraph) DFSInOrder(order Order) []*Vertex {
+	if len(g.Vertices) == 0 {
+		return g.Vertices
+	}
+	var (
+		s      = g.Vertices[0]
+		result []*Vertex
+		marked = make(map[*Vertex]bool)
+	)
+	if order&PRE == PRE {
+		g.dfs(s, nil, marked, func(v *Vertex) {
+			result = append(result, v)
+		}, nil)
+		return result
+	}
+	if order&POST == POST {
+		g.dfs(s, nil, marked, nil, func(v *Vertex) {
+			result = append(result, v)
+		})
+	}
+	if order&REV == REV {
+		util.Reverse(&result)
+	}
+	return result
 }
 
 //另外实现一个dfs
-func (g *DiGraph) HasDirectedCycle() bool {
-	var hasCycle = false
-	for _, v := range g.Vertices {
-		if hasCycle {
-			return hasCycle
-		}
-		var (
-			onStack = make(map[*Vertex]bool)
-			prev    = new(Vertex)
-		)
-		g.dfs(v, nil, onStack, func(v *Vertex) {
+//可以用stack表示当前扫描的路劲,用onStack标记这些点,
+//当下个点存在onStack的时候,说明成环.
+//返回的cycle数组,头尾相等,如果无环长度为0.
+func (g *DiGraph) HasDirectedCycle() []*Vertex {
+	var (
+		onStack  = make(map[*Vertex]bool)
+		marked   = make(map[*Vertex]bool)
+		vertexTo = make(map[*Vertex]*Vertex)
+		hasCycle bool
+		cycle    []*Vertex
+	)
 
-		})
+	//dfs
+	var dfs func(g *DiGraph, v *Vertex)
+	dfs = func(g *DiGraph, v *Vertex) {
+		onStack[v] = true
+		marked[v] = true
+		for _, edge := range g.Adj(v) {
+			if hasCycle {
+				return
+			} else if !marked[edge.vtx] {
+				vertexTo[edge.vtx] = v
+				dfs(g, edge.vtx)
+			} else if onStack[edge.vtx] {
+				for x := v; x != edge.vtx; x = vertexTo[x] {
+					cycle = append([]*Vertex{x}, cycle...)
+				}
+				cycle = append([]*Vertex{v, edge.vtx}, cycle...)
+				hasCycle = true
+				return
+			}
+		}
+		//从扫描路径上退栈.
+		onStack[v] = false
 	}
-	return hasCycle
+
+	for _, v := range g.Vertices {
+		if !marked[v] {
+			dfs(g, v)
+		}
+	}
+	return cycle
 }
 
 //walks the graph by dfs.
-func (g *DiGraph) dfs(s *Vertex, count *int, marked map[*Vertex]bool, walk func(v *Vertex)) {
+func (g *DiGraph) dfs(s *Vertex, count *int, marked map[*Vertex]bool, prewalk func(v *Vertex), postwalk func(v *Vertex)) {
 	marked[s] = true
-	if walk != nil {
-		walk(s)
+	//先序
+	if prewalk != nil {
+		prewalk(s)
 	}
 	if count != nil {
 		*count++
@@ -158,8 +220,12 @@ func (g *DiGraph) dfs(s *Vertex, count *int, marked map[*Vertex]bool, walk func(
 	edges := g.Adj(s)
 	for _, edge := range edges {
 		if !marked[edge.vtx] {
-			g.dfs(edge.vtx, count, marked, walk)
+			g.dfs(edge.vtx, count, marked, prewalk, postwalk)
 		}
+	}
+	//后序
+	if postwalk != nil {
+		postwalk(s)
 	}
 }
 

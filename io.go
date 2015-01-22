@@ -100,3 +100,24 @@ func DeleteIndexOf(i int, slc interface{}) {
 		slice.SetLen(slice.Len() - 1)
 	}
 }
+
+//Reverse reverses a slice
+func Reverse(slc interface{}) {
+	slice := reflect.ValueOf(slc).Elem()
+	if slice.Len() <= 1 {
+		return
+	} else {
+		l := 0
+		h := slice.Len() - 1
+		for l < h {
+			//value diceng shi zhizhen
+			//zheyang keyi chansheng yige copy
+			tmp := reflect.ValueOf(slice.Index(l).Interface())
+			slice.Index(l).Set(slice.Index(h))
+			slice.Index(h).Set(tmp)
+			l++
+			h--
+		}
+	}
+	slice.Len()
+}

@@ -32,6 +32,17 @@ func sliceIntEqual(s1, s2 []int) bool {
 	return true
 }
 
+func TestReverse(t *testing.T) {
+	var slice = []int{0, 1, 2}
+	var reverse = []int{2, 1, 0}
+	Reverse(&slice)
+	if !sliceIntEqual(slice, reverse) {
+		t.Log(slice)
+		t.Log(reverse)
+		t.Fail()
+	}
+}
+
 func TestIndexOf(t *testing.T) {
 	var slice = []int{0, 1, 2}
 	if IndexOf(0, slice) != 0 {

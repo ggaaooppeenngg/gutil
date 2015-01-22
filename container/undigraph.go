@@ -56,9 +56,6 @@ func (g *UndiGraph) String() string {
 	var output string
 	for _, v := range g.Vertices {
 		edges := g.Adj(v)
-		if len(edges) == 0 {
-			break
-		}
 		output += v.Id + " ->"
 		for _, edge := range edges {
 			output += " " + edge.vtx.Id
