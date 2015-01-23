@@ -126,13 +126,16 @@ func (g *DiGraph) Adj(v *Vertex) (edges []*edge) {
 //每个object有一位标记位,当dfs不能到达说明,没有被引用,会被标记,
 //以便清扫.
 
-func (g *DiGraph) DirectedDFS(sources []*Vertex) {
+func (g *DiGraph) DirectedDFS(source *Vertex) []*Vertex {
 	var (
-		marked = make(map[*Vertex]bool)
+		marked   = make(map[*Vertex]bool)
+		vertices []*Vertex
 	)
-	for _, s := range sources {
-		g.dfs(s, nil, marked, nil, nil)
+	walk := func(v *Vertex) {
+		vertices = append(vertices, v)
 	}
+	g.dfs(source, nil, marked, walk, nil)
+	return vertices
 }
 
 //DFSInOrder 按照order的顺序返回DFS遍历结果.
@@ -162,11 +165,22 @@ func (g *DiGraph) DFSInOrder(order Order) []*Vertex {
 	return result
 }
 
+//TopSort returns vertices in topological sort order(post reverse),if
+//there is cycle returns nil.
+func (g *DiGraph) TopSort() []*Vertex {
+	if len(g.DirectedCycle()) != 0 {
+		return nil
+	}
+	//后序遍历是个回溯的过程,dfs(v)发生在dfs(w)之前,w就要指向v.
+	//然后把序列倒过来就是一个拓扑排序.
+	return g.DFSInOrder(POST | REV)
+}
+
 //另外实现一个dfs
 //可以用stack表示当前扫描的路劲,用onStack标记这些点,
 //当下个点存在onStack的时候,说明成环.
 //返回的cycle数组,头尾相等,如果无环长度为0.
-func (g *DiGraph) HasDirectedCycle() []*Vertex {
+func (g *DiGraph) DirectedCycle() []*Vertex {
 	var (
 		onStack  = make(map[*Vertex]bool)
 		marked   = make(map[*Vertex]bool)
@@ -239,4 +253,70 @@ func (g *DiGraph) Reverse() *DiGraph {
 		}
 	}
 	return rg
+}
+
+//SCC return strong connected components,if g is empty returns nil.
+func (g *DiGraph) SCC() (scc *SCC) {
+	return g.divide()
+}
+
+//SCC is Strong Connected Components.
+type SCC struct {
+	id map[*Vertex]int
+}
+
+//divide returns SCC,Kosaraju algorithm,
+//it's easy to code but difficult to understand.
+func (g *DiGraph) divide() *SCC {
+	//反置矩阵的后序遍历.
+	scc := &SCC{make(map[*Vertex]int)}
+	if len(g.Vertices) == 0 {
+		return nil
+	}
+	count := 0
+	marked := make(map[*Vertex]bool)
+	walk := func(v *Vertex) {
+		scc.id[v] = count
+	}
+	vertices := g.Reverse().DFSInOrder(POST | REV)
+	for _, v := range vertices {
+		if !marked[v] {
+			g.dfs(v, nil, marked, walk, nil)
+			count++
+		}
+	}
+	return scc
+}
+
+//proof:
+//证明充分条件:如果v和s连通,假设dfs(s)不能到达v,那么说明v之前已经被marked了,
+//但是因为有路径v可达s,s也肯定被marked过,所以不可能调用dfs(s),推出矛盾.
+//所以v-s连通,是dfs(s)可达v的充分条件.
+//证明必要条件:假设dfs(s)有一个可达结点v,那么说明s可以到达v,并且在reverse graph里面有一条路径v可达s,
+//剩下只差,证明v到达s,也就是证明s可达v在reverse graph里面存在.
+//证明的关键是:reverse post order保证reverse graph dfs时,对于s可达v,肯定有dfs(v)在dfs(s)之前调用(因为有一个v->s),要么是在s结束之前开始,在s结束之前结束.
+//要么是在s开始之前开始(在s之前结束)
+//又因为有一条v到s的可达路径,所以第一种情况不可能,只有第二种情况,所以得证.
+
+//直觉上来讲,reverse graph 的 reverse post order 产生的是一串后面指向前面的序列,特征是一段一段连续的,分隔的地方是有一个点不能直接接到前面的结点.
+//如果从s能到v,那么v就能指向s,(v之前没有被遍历到过)
+
+//TC is TransitiveClosure.
+type TC struct {
+	all map[*Vertex]map[*Vertex]bool
+}
+
+func (tc *TC) Reachable(v, w *Vertex) bool {
+	return tc.all[v][w]
+}
+
+//传递闭包是平方的,把这个降低还是一个没有解决的问题.
+func (g *DiGraph) TransitiveClosure() *TC {
+	tc := &TC{make(map[*Vertex]map[*Vertex]bool)}
+	for _, v := range g.Vertices {
+		for _, w := range g.DirectedDFS(v) {
+			tc.all[v][w] = true
+		}
+	}
+	return nil
 }
