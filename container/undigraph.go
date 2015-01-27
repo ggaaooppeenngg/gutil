@@ -1,13 +1,15 @@
 package container
 
 import (
+	"container/heap"
 	"container/list"
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 )
 
-//UndiGraph is undirected graph,implemented in an array of adjacency lists.
+// UndiGraph is undirected graph,implemented in an slice of adjacency lists.
 
 type UndiGraph struct {
 	V          int                 // number of vertices
@@ -19,6 +21,7 @@ type UndiGraph struct {
 }
 
 //Path is a representation of paths from source vertex.
+
 type Path struct {
 	Source *Vertex
 	edgeTo map[*Vertex]*edge
@@ -77,7 +80,7 @@ func (g *UndiGraph) AddVertex(v *Vertex) error {
 	return nil
 }
 
-//AddEdge adds edge v-w,parallel edges is allowed
+//AddEdge adds edge v-w,parallel edges is allowed,and self-loop is allowed.
 func (g *UndiGraph) AddEdge(v *Vertex, w *Vertex, weights ...float64) error {
 	if len(weights) > 1 {
 		return errors.New("more than one weight is not allowed")
@@ -344,3 +347,82 @@ func (g *UndiGraph) divide() *CC {
 	}
 	return cc
 }
+
+//minimum spanning tree.
+
+//proof:图的a cut 是把定点分成两个非空结点集合,而一个crossing edge 的 a cut就是连接一个集合到另外一个集合的一条边.
+//对于任何的cut,最小的那个crossing edge就正在MST里面,可以用反证法,如果有一个e是最小的,不在MST里面,那么假设f连接两个集合并且满足最小生成树.
+//这个时候把e加到里面,就会有一个环(树连接任意两点就会成环),从一个集合到f再到另一个并且通过e返回,这个时候把f去掉,那么权重比原来小,所以除了e不可能有别的结点.
+//连接两个集合的crossing edge不一定只有一个,比如g和h是一个集合里面的,剩下的是另外一个的,连接g和h就有两个.
+//a-+
+//  |
+//  v
+//  b-+
+//    |
+//    v
+//    c---+
+//     -+ |
+//      | |
+//      v |
+//      d---+
+//        | |
+//        v |
+//        g |
+//          |
+//          v
+//          e---+
+//           -+ |
+//            | |
+//            v |
+//            f |
+//              |
+//              v
+//              h
+
+//解决方法: Prim's algorithm,贪婪算法 Greedy MST algorithm.
+//把定点分成两部分,每次都找到最小的crossing edge然后把对应结点加到另外一个集合里面.
+//
+func PrimMST(g *UndiGraph) {
+	//记录这颗数
+	edgeTo := make(map[*Vertex]*edge)
+	//记录距离
+	distTo := make(map[*Vertex]float64)
+	//marked,用于dfs
+	marked := make(map[*Vertex]bool)
+	//优先队列
+	pq := make(PQ, g.V)
+	heap.Init(&pq)
+	if len(g.Vertices) == 0 {
+		return
+	}
+	s := g.Vertices[0]
+	for _, v := range g.Vertices {
+		distTo[v] = math.MaxFloat64
+	}
+	distTo[s] = 0.0
+	pq.Push(&edge{s, new(float64)})
+	for pq.Len() > 0 {
+		edgeV := pq.Pop().(*edge)
+		marked[edgeV.vtx] = true
+		v := edgeV.vtx
+		edges := g.Adj(v)
+		for _, e := range edges {
+			if marked[e.vtx] {
+				continue
+			}
+			var w float64
+			if e.weight == nil {
+				w = 0
+			} else {
+				w = *(e.weight)
+			}
+			if w < distTo[e.vtx] {
+				edgeTo[e.vtx] = &edge{v, e.weight}
+			}
+			//TODO:heap,优先队列包含的方法
+			if pq.
+		}
+	}
+}
+
+//每次从最小优先队列里面取出最小的crossing edge,然后构成

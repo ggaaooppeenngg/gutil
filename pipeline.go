@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"reflect"
+	"sync"
 )
 
 //pipeline is inspired by this blog http://blog.golang.org/pipelines
@@ -56,4 +57,72 @@ func (p *PL) Pipe(worker interface{}, max int) {
 	p.workers = append(p.workers, worker)
 	//TODO:get func argument
 	p.channels = append(p.channels, make(chan int))
+}
+
+//sum the numbers and send to output.
+func Sum(sum chan []int) (output chan []int) {
+	output = make(chan []int)
+	go func() {
+		var total []int
+		count := 0
+		for slc := range sum {
+			count++
+			if len(total) < len(slc) {
+				tmp := make([]int, len(slc))
+				copy(tmp, total)
+				total = tmp
+			}
+			for i, v := range slc {
+				total[i] += v
+			}
+		}
+		if count > 0 {
+			output <- total
+		}
+		close(output)
+	}()
+	return
+}
+
+//sum numbers parallel
+func ParallelSum(slcs ...[]int) []int {
+	input := make(chan []int, len(slcs))
+	output := make(chan []int)
+	var result []int
+	go func(input chan []int) {
+		for _, slc := range slcs {
+			input <- slc
+		}
+		close(input)
+	}(input)
+
+	for {
+		var wg sync.WaitGroup
+		wg.Add(cap(input) / 2)
+		for i := 0; i < cap(input)/2; i++ {
+			out := Sum(input)
+			go func() {
+				defer wg.Done()
+				for o := range out {
+					output <- o
+				}
+			}()
+		}
+		go func(output chan []int) {
+			wg.Wait()
+			close(output)
+		}(output)
+
+		input = make(chan []int, cap(input)/2)
+		if cap(input) < 2 {
+			result = <-output
+			break
+		}
+		for o := range output {
+			input <- o
+		}
+		output = make(chan []int)
+		close(input)
+	}
+	return result
 }
