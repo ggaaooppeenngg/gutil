@@ -7,7 +7,7 @@ import (
 //Item is the container of the
 type Item struct {
 	*edge
-	index int // The index of the item in the heap.
+	index int // The index of the item in the heap,用来fix的时候用.
 }
 
 //PQ is the priority queue containing *Vertex.
@@ -48,6 +48,18 @@ func (pq *PQ) Pop() interface{} {
 }
 
 //更改item.index的内容并且调整.
-func (pq *PQ) update(item *Item) {
+func (pq *PQ) update(item *Item, e *edge) {
+	item.edge = e
 	heap.Fix(pq, item.index)
+}
+
+//含有某个结点.
+func (pq PQ) contains(v *Vertex) int {
+	index := -1
+	for _, item := range pq {
+		if item.vtx == v {
+			return item.index
+		}
+	}
+	return index
 }

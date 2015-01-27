@@ -381,19 +381,19 @@ func (g *UndiGraph) divide() *CC {
 
 //解决方法: Prim's algorithm,贪婪算法 Greedy MST algorithm.
 //把定点分成两部分,每次都找到最小的crossing edge然后把对应结点加到另外一个集合里面.
-//
-func PrimMST(g *UndiGraph) {
+//PrimMST returns a new graph containing minimun spanning tree.
+func PrimMST(g *UndiGraph) *UndiGraph {
 	//记录这颗数
 	edgeTo := make(map[*Vertex]*edge)
 	//记录距离
-	distTo := make(map[*Vertex]float64)
+	distTo := make(map[*Vertex]float64) //distTo[w]=edgeTo[w].weight
 	//marked,用于dfs
 	marked := make(map[*Vertex]bool)
 	//优先队列
 	pq := make(PQ, g.V)
 	heap.Init(&pq)
 	if len(g.Vertices) == 0 {
-		return
+		return nil
 	}
 	s := g.Vertices[0]
 	for _, v := range g.Vertices {
@@ -418,11 +418,25 @@ func PrimMST(g *UndiGraph) {
 			}
 			if w < distTo[e.vtx] {
 				edgeTo[e.vtx] = &edge{v, e.weight}
+				distTo[e.vtx] = w
+				if index := pq.contains(e.vtx); index != -1 {
+					item := pq[index]
+					pq.update(item, e)
+				} else {
+					pq.Push(e)
+				}
 			}
-			//TODO:heap,优先队列包含的方法
-			if pq.
 		}
 	}
+	retG := NewUndiGraph()
+	for prev, e := range edgeTo {
+		if e.weight != nil {
+			retG.AddEdge(prev, e.vtx, *e.weight)
+		} else {
+			retG.AddEdge(prev, e.vtx)
+		}
+	}
+	return retG
 }
 
 //每次从最小优先队列里面取出最小的crossing edge,然后构成
