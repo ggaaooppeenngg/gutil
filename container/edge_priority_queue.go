@@ -34,7 +34,8 @@ func (pq PQ) Swap(i, j int) {
 }
 func (pq *PQ) Push(x interface{}) {
 	n := len(*pq)
-	item := x.(*Item)
+	item := new(Item)
+	item.edge = x.(*edge)
 	item.index = n
 	*pq = append(*pq, item)
 }
@@ -44,7 +45,7 @@ func (pq *PQ) Pop() interface{} {
 	item := old[n-1]
 	item.index = -1 //for safety
 	*pq = old[0 : n-1]
-	return item
+	return item.edge
 }
 
 //更改item.index的内容并且调整.

@@ -382,7 +382,7 @@ func (g *UndiGraph) divide() *CC {
 //解决方法: Prim's algorithm,贪婪算法 Greedy MST algorithm.
 //把定点分成两部分,每次都找到最小的crossing edge然后把对应结点加到另外一个集合里面.
 //PrimMST returns a new graph containing minimun spanning tree.
-func PrimMST(g *UndiGraph) *UndiGraph {
+func PMST(g *UndiGraph) *UndiGraph {
 	//记录这颗数
 	edgeTo := make(map[*Vertex]*edge)
 	//记录距离
@@ -439,4 +439,10 @@ func PrimMST(g *UndiGraph) *UndiGraph {
 	return retG
 }
 
-//每次从最小优先队列里面取出最小的crossing edge,然后构成
+//Kruskal’s algorithm
+func kMST(g *UndiGraph) *UndiGraph {
+	//按照顺序组装最短的不成环的边直到组装了V-1次.
+	//TODO:因为要用到边的两头,存储的边没有这个值,很难找.
+	//改变存储模式,或者先转换再运行算法.
+	return nil
+}
