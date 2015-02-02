@@ -8,6 +8,25 @@ type Heap struct {
 	heap []*edge
 }
 
+// Push adds an element to the heap.
+func (h *Heap) Push(e *edge) {
+	h.heap = append(h.heap, e)
+	h.swim(len(h.heap) - 1)
+}
+
+// Pop returns minimun element or nil if heap is empty,and removes it.
+func (h *Heap) Pop() *edge {
+	if len(h.heap) > 0 {
+		min := h.heap[0]
+		h.Swap(0, len(h.heap)-1)
+		h.heap = h.heap[:len(h.heap)-1]
+		h.sink(0)
+		return min
+	} else {
+		return nil
+	}
+}
+
 // implement Swap,Less,Len of sort.Interface.
 func (h *Heap) Swap(i, j int) {
 	h.heap[i], h.heap[j] = h.heap[j], h.heap[i]
@@ -31,7 +50,7 @@ func (h *Heap) Len() int {
 }
 
 // travel up 去调整heap,不断向上替换结点.
-func swim(h Heap, j int) {
+func (h *Heap) swim(j int) {
 	for {
 		i := (j - 1) / 2 //parent
 		if i == j || !h.Less(j, i) {
@@ -43,7 +62,7 @@ func swim(h Heap, j int) {
 }
 
 // travel down 去调整heap,如果index溢出的话就停止.
-func sink(h Heap, i int) {
+func (h *Heap) sink(i int) {
 	for {
 		j1 := 2*i + 1                //left child.
 		if j1 >= h.Len() || j1 < 0 { //j1 < 0 after overflow.
