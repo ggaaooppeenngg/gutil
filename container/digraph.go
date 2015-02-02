@@ -320,3 +320,10 @@ func (g *DiGraph) TransitiveClosure() *TC {
 	}
 	return nil
 }
+
+//类似于把绷紧的橡胶带通过寻找较小的边替换而放松
+func relax() {}
+
+//TODO:Dijkstra's algorithm,等路劲算法.
+func DSP() {
+}
