@@ -51,6 +51,30 @@ type edge struct {
 	weight *float64 //default nil, because default folat64!=0
 }
 
+//weight gets dereference a float pointer
+func (e *edge) Weight() (w float64, has bool) {
+	if e.weight == nil {
+		return 0.0, false
+	} else {
+		return *e.weight, true
+	}
+}
+
+//newEdge returns a new edge with vertex and weight.
+func newEdge(v *Vertex, w float64) *edge {
+	wp := new(float64)
+	*wp = w
+	return &edge{
+		v,
+		wp,
+	}
+}
+
+func (e edge) String() string {
+	w, _ := e.Weight()
+	return fmt.Sprintf("%s:%f", e.vtx.Id, w)
+}
+
 //for debug
 func (g Graph) String() string {
 	var output string

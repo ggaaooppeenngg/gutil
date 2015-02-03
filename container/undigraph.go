@@ -1,7 +1,6 @@
 package container
 
 import (
-	"container/heap"
 	"container/list"
 	"errors"
 	"fmt"
@@ -390,8 +389,7 @@ func PMST(g *UndiGraph) *UndiGraph {
 	//marked,用于dfs
 	marked := make(map[*Vertex]bool)
 	//优先队列
-	pq := make(PQ, g.V)
-	heap.Init(&pq)
+	pq := newPQ()
 	if len(g.Vertices) == 0 {
 		return nil
 	}
@@ -419,12 +417,15 @@ func PMST(g *UndiGraph) *UndiGraph {
 			if w < distTo[e.vtx] {
 				edgeTo[e.vtx] = &edge{v, e.weight}
 				distTo[e.vtx] = w
-				if index := pq.contains(e.vtx); index != -1 {
-					item := pq[index]
-					pq.update(item, e)
-				} else {
-					pq.Push(e)
-				}
+				//BUG:这个优先队列有问题.
+				/*
+					if index := pq.Contains(e); index != -1 {
+						pq.items[index] = e
+						heap.Fix(pq, index)
+					} else {
+						pq.Push(e)
+					}
+				*/
 			}
 		}
 	}
