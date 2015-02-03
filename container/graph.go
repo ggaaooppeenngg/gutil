@@ -39,7 +39,7 @@ type Vertex struct {
 }
 
 //newVertex inits a new vertext.
-func newVertext(id string) *Vertex {
+func newVertex(id string) *Vertex {
 	return &Vertex{
 		Id: id,
 	}
@@ -58,6 +58,14 @@ func (e *edge) Weight() (w float64, has bool) {
 	} else {
 		return *e.weight, true
 	}
+}
+
+//Set weight
+func (e *edge) SetWeight(w float64) {
+	if e.weight == nil {
+		e.weight = new(float64)
+	}
+	*e.weight = w
 }
 
 //newEdge returns a new edge with vertex and weight.

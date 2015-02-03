@@ -8,7 +8,7 @@ import (
 //PQ is the index minimun priority queue containing *edges.
 type PQ struct {
 	edges []*edge
-	index map[*edge]struct{}
+	index map[*Vertex]int // 用结点作索引,假设每个边的结点唯一.
 }
 
 func (pq PQ) String() string {
@@ -48,7 +48,7 @@ func (pq PQ) Swap(i, j int) {
 // 不能用这个push pop,要用heap的push和pop.
 func (pq *PQ) Push(x interface{}) {
 	edge := x.(*edge)
-	pq.index[edge] = struct{}{}
+	pq.index[edge.vtx] = len(pq.edges)
 	pq.edges = append(pq.edges, edge)
 }
 func (pq *PQ) Pop() interface{} {
@@ -56,14 +56,21 @@ func (pq *PQ) Pop() interface{} {
 	n := len(old)
 	item := old[n-1]
 	pq.edges = old[0 : n-1]
-	delete(pq.index, item)
+	delete(pq.index, item.vtx)
 	return item
 }
 
 //含有某个结点.
-func (pq PQ) Contains(e *edge) bool {
-	_, ok := pq.index[e]
+func (pq PQ) Contains(v *Vertex) bool {
+	_, ok := pq.index[v]
 	return ok
+}
+
+//更改某个结点
+func (pq *PQ) Change(v *Vertex, weight float64) {
+	i := pq.index[v]
+	pq.edges[i].SetWeight(weight)
+	heap.Fix(pq, i)
 }
 
 //Insert inserts element.
@@ -88,16 +95,16 @@ func newPQ(edges ...[]*edge) *PQ {
 	var pq *PQ
 	if len(edges) == 0 {
 		pq = &PQ{
-			index: make(map[*edge]struct{}),
+			index: make(map[*Vertex]int),
 		}
 	}
 	if len(edges) == 1 {
 		pq = &PQ{
 			edges[0],
-			make(map[*edge]struct{}),
+			make(map[*Vertex]int),
 		}
-		for _, edge := range edges[0] {
-			pq.index[edge] = struct{}{}
+		for i, edge := range edges[0] {
+			pq.index[edge.vtx] = i
 		}
 		heap.Init(pq)
 	}

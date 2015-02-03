@@ -3,6 +3,8 @@ package container
 import (
 	"errors"
 	"fmt"
+	"math"
+	"sort"
 	"sync"
 
 	"github.com/ggaaooppeenngg/util"
@@ -59,9 +61,17 @@ func (g *DiGraph) GetVertexById(id string) *Vertex {
 	return nil
 }
 
+type vtxSlice []*Vertex
+
+func (vs vtxSlice) Less(i, j int) bool { return vs[i].Id < vs[j].Id }
+func (vs vtxSlice) Len() int           { return len(vs) }
+func (vs vtxSlice) Swap(i, j int)      { vs[i], vs[j] = vs[j], vs[i] }
+
 func (g *DiGraph) String() string {
 	var output string
-	for _, v := range g.Vertices {
+	vertices := vtxSlice(g.Vertices)
+	sort.Sort(vertices)
+	for _, v := range vertices {
 		edges := g.Adj(v)
 		output += v.Id + " ->"
 		for _, edge := range edges {
@@ -255,6 +265,44 @@ func (g *DiGraph) Reverse() *DiGraph {
 	return rg
 }
 
+//-------------------------------shortest path algorithm--------------------------
+//TODO:Dijkstra's algorithm,等路劲算法.
+func (g *DiGraph) DSP(s *Vertex) *Path {
+	path := newPath(s)
+	for _, v := range g.Vertices {
+		path.distTo[v] = math.MaxFloat64
+	}
+	path.distTo[s] = 0.0
+	pq := newPQ()
+	pq.Insert(newEdge(s, 0.0))
+	for pq.Len() > 0 {
+		//然后每次都把一个距离最小的结点加入到.
+		edge := pq.Get()
+		//每次更新周围的点,如果可以松就松.
+		//TODO:如果已经加入最短路劲的点用处理.
+		relax(path, g, edge.vtx, pq)
+	}
+	return path
+}
+
+//放松点v周围的crossing edge.
+func relax(path *Path, g *DiGraph, v *Vertex, pq *PQ) {
+	edges := g.Adj(v)
+	for _, edge := range edges {
+		w, _ := edge.Weight()
+		vtx := edge.vtx
+		if path.distTo[vtx] > path.distTo[v]+w {
+			path.distTo[vtx] = path.distTo[v] + w
+			path.edgeTo[vtx] = newEdge(v, w)
+			if pq.Contains(vtx) {
+				pq.Change(vtx, w)
+			} else {
+				pq.Insert(newEdge(vtx, w))
+			}
+		}
+	}
+}
+
 //SCC return strong connected components,if g is empty returns nil.
 func (g *DiGraph) SCC() (scc *SCC) {
 	return g.divide()
@@ -319,11 +367,4 @@ func (g *DiGraph) TransitiveClosure() *TC {
 		}
 	}
 	return nil
-}
-
-//类似于把绷紧的橡胶带通过寻找较小的边替换而放松
-func relax() {}
-
-//TODO:Dijkstra's algorithm,等路劲算法.
-func DSP() {
 }

@@ -20,10 +20,29 @@ type UndiGraph struct {
 }
 
 //Path is a representation of paths from source vertex.
-
+//single source path.
 type Path struct {
 	Source *Vertex
 	edgeTo map[*Vertex]*edge
+	distTo map[*Vertex]float64
+}
+
+//newPath returns a initiated Path.
+func newPath(s *Vertex) *Path {
+	return &Path{
+		s,
+		make(map[*Vertex]*edge),
+		make(map[*Vertex]float64),
+	}
+}
+
+func (p *Path) String() string {
+	g := NewDiGraph()
+	for k, v := range p.edgeTo {
+		w, _ := v.Weight()
+		g.AddEdge(v.vtx, k, w)
+	}
+	return g.String()
 }
 
 //HasPathto return true,if Path reachs d.
@@ -56,6 +75,7 @@ func (g *UndiGraph) GetVertexById(id string) *Vertex {
 
 func (g *UndiGraph) String() string {
 	var output string
+
 	for _, v := range g.Vertices {
 		edges := g.Adj(v)
 		output += v.Id + " ->"
@@ -63,6 +83,7 @@ func (g *UndiGraph) String() string {
 			output += " " + edge.vtx.Id
 		}
 		output += "\n"
+
 	}
 	return output
 }
@@ -223,6 +244,7 @@ func (g *UndiGraph) GetPathDFS(s *Vertex) *Path {
 	var (
 		marked       = make(map[*Vertex]bool)
 		edgeTo       = make(map[*Vertex]*edge)
+		distTo       = make(map[*Vertex]float64)
 		tmp    *edge = nil
 	)
 	dfs(g, s, nil, marked, func(v *Vertex) {
@@ -231,7 +253,7 @@ func (g *UndiGraph) GetPathDFS(s *Vertex) *Path {
 		}
 		tmp = &edge{v, nil}
 	})
-	return &Path{s, edgeTo}
+	return &Path{s, edgeTo, distTo}
 }
 
 //GetPathBFS returns the path from s in BFS.
@@ -240,6 +262,7 @@ func (g *UndiGraph) GetPathBFS(s *Vertex) *Path {
 	var (
 		tmp    *edge
 		edgeTo = make(map[*Vertex]*edge)
+		distTo = make(map[*Vertex]float64)
 	)
 	bfs(g, s, func(v *Vertex) {
 		if tmp != nil {
@@ -247,7 +270,7 @@ func (g *UndiGraph) GetPathBFS(s *Vertex) *Path {
 		}
 		tmp = &edge{v, nil}
 	})
-	return &Path{s, edgeTo}
+	return &Path{s, edgeTo, distTo}
 }
 
 //proof:

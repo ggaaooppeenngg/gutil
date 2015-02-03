@@ -5,14 +5,14 @@ import (
 )
 
 func TestQueue(t *testing.T) {
-	e := newEdge(newVertext("d"), 4.0)
-	var es = []*edge{newEdge(newVertext("a"), 1.0),
+	e := newEdge(newVertex("d"), 4.0)
+	var es = []*edge{newEdge(newVertex("a"), 1.0),
 		e,
-		newEdge(newVertext("b"), 2.0),
-		newEdge(newVertext("c"), 3.0),
+		newEdge(newVertex("b"), 2.0),
+		newEdge(newVertex("c"), 3.0),
 	}
 	pq := newPQ(es)
-	if !pq.Contains(e) {
+	if !pq.Contains(e.vtx) {
 		t.Fatalf("do not get e %v", e)
 	}
 	for i := 0; i < 4; i++ {
