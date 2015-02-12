@@ -1,9 +1,14 @@
 package util
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
+	Url "net/url"
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -34,7 +39,7 @@ func clientConstructor(connectTimeOut int, totalTimeOut int) *http.Client {
 	}
 }
 
-//Get gets url and returns response as []byte,using default client.
+// Get gets url and returns response as []byte,using default client.
 func Get(url string) ([]byte, error) {
 	res, err := client.Get(url)
 	if err != nil {
@@ -46,4 +51,46 @@ func Get(url string) ([]byte, error) {
 		return nil, err
 	}
 	return ret, nil
+}
+
+var (
+	urlValuesType = reflect.TypeOf(Url.Values{})
+	ioReaderType  = reflect.TypeOf(new(io.Reader))
+)
+
+// Post method returns post request not sent.
+// Data could be url.Values.
+// TODO:test.
+func Post(url string, data interface{}) (*http.Request, error) {
+	switch data.(type) {
+	case Url.Values:
+		form := data.(Url.Values)
+		body := strings.NewReader(form.Encode())
+		req, err := http.NewRequest("POST", url, body)
+		if err != nil {
+			return nil, err
+		}
+		return req, err
+	case io.Reader:
+		reader := data.(io.Reader)
+		pkReader := Peekable(reader)
+		b, err := pkReader.PeekAByte()
+		if err != nil {
+			return nil, err
+		}
+		req, err := http.NewRequest("POST", url, pkReader)
+		if err != nil {
+			return nil, err
+		}
+		// json
+		if b == '{' || b == '[' {
+			req.Header.Set("Content-Type", "application/json")
+		} else {
+			// url-encoded
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
+		return req, nil
+	default:
+		return nil, fmt.Errorf("data type %#v is not supported.", reflect.TypeOf(data))
+	}
 }
