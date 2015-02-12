@@ -1,57 +1,12 @@
 package util
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"path"
 	"reflect"
 )
-
-// PeekableReader allows to peek datas.
-type PeekableReader struct {
-	io.Reader
-	buf bytes.Buffer
-}
-
-// Peekable wraps an io.Reader to make it peekable.
-func Peekable(reader io.Reader) *PeekableReader {
-	return &PeekableReader{
-		reader,
-		bytes.Buffer{},
-	}
-}
-
-// PeekAByte peeks a byte from the reader.
-func (p *PeekableReader) PeekAByte() (byte, error) {
-	buf := make([]byte, 1)
-	_, err := p.Reader.Read(buf)
-	if err != nil {
-		return buf[0], err
-	}
-	return buf[0], nil
-}
-
-// Peek peeks data from reader.
-func (p *PeekableReader) Peek(buf []byte) (n int, err error) {
-	n, err = p.Reader.Read(buf)
-	if err != nil {
-		return
-	}
-	// if n<len(buf),returns error.
-	n, err = p.buf.Write(buf)
-	return n, err
-}
-
-// Read reads data from reader.{
-func (p *PeekableReader) Read(buf []byte) (n int, err error) {
-	if p.buf.Len() == 0 {
-		return p.Reader.Read(buf)
-	} else {
-		return p.buf.Read(buf)
-	}
-}
 
 //Pwd retruns current working directory path as string.
 func Pwd() string {

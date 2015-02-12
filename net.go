@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -73,17 +74,17 @@ func Post(url string, data interface{}) (*http.Request, error) {
 		return req, err
 	case io.Reader:
 		reader := data.(io.Reader)
-		pkReader := Peekable(reader)
-		b, err := pkReader.PeekAByte()
+		bufReader := bufio.NewReader(reader)
+		b, err := bufReader.Peek(1)
 		if err != nil {
 			return nil, err
 		}
-		req, err := http.NewRequest("POST", url, pkReader)
+		req, err := http.NewRequest("POST", url, bufReader)
 		if err != nil {
 			return nil, err
 		}
-		// json
-		if b == '{' || b == '[' {
+		// json-encoded
+		if b[0] == '{' || b[0] == '[' {
 			req.Header.Set("Content-Type", "application/json")
 		} else {
 			// url-encoded
