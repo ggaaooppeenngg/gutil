@@ -1,3 +1,9 @@
+// 最短路径算法的比较:
+// 算法名称          限制                    一般情况　 最差情况　内存 sweet spot
+// Dijkstra(eager)   positive edge weights   ElogV      ElogV     V    worst-case guarantee
+// topological 		 sort edge-weighted DAGs E+V        E+V       V    optimal for acyclic
+// Bellman-Ford      (queue-based) no        E+V        VE        V    widely applicable
+//                   negative cycles
 package container
 
 import (
@@ -225,4 +231,69 @@ func (g *EdgeWeightedDigraph) ALP(s *Vertex) *DirectedPath {
 		}
 	}
 	return path
+}
+
+//
+// Bellman-Ford Algorithm 传统方式就是这样的,是书上的java代码,当伪代码看.
+// for (int pass = 0; pass < G.V(); pass++)
+// 	for (v = 0; v < G.V(); v++)
+// 	 for (DirectedEdge e : G.adj(v))
+// 		relax(e);
+// 有三层循环,每次所有的边都会被遍历一次,遍历的次数等于点的个数.(内层两个循环是所有的边,最外面是点的次数)
+// 时间复杂度是O(EV)(每个点都要relaxE条边),空间复杂度是O(V).
+// proof:
+// V0->V1->...->Vk,是一条最短路径,如果没有负环,这条路径是存在的.
+// 假设 经过i次pass,这个算法可以算出V0到Vi的最短路径.
+// 基本是 (i=0) V0 是一条最短路径.
+// 推理是 如果V0->V1->...->Vi成立,然后Vi被relax之后,Vi+1的距离就不会超过Vi的距离加上边Vi->Vi+1的距离.
+// 当然也不可能小于,因为它是最短路径.
+// 整个算法代价很高,需要优化,原本的论文里面也提到了这个优化,现在讨论这个优化.
+// 其实并不是说每次都要遍历所有的边,很容易发现,需要遍历的其实是那些之前导致自身distTo距离改变的结点.
+// 这些结点的出度才是有效的,其它的还会保持原样,所以优化的过程就是基于这一点,依赖队列的结构实现.
+// BFSP is Bellman-Ford alogrithm (queue based)
+func (g *EdgeWeightedDigraph) BFSP(s *Vertex) *DirectedPath {
+	path := NewDirectedPath(s)
+	onQ := make(map[*Vertex]bool)
+	queue := new(VertexQueue)
+	path.InitPosInf(g.Vertices)
+	path.DistTo[s] = 0.0
+	onQ[s] = true
+	cost := 0
+	// TODO:负环检查不能统一.
+	for !queue.Empty() && g.hasCycle() {
+		v := queue.Front()
+		queue.Pop()
+		onQ[v] = false
+		g.relaxOnQ(path, v, &cost, onQ, queue)
+	}
+	return nil
+}
+
+// relax on Queue is relax function for the BFSP
+func (g *EdgeWeightedDigraph) relaxOnQ(path *DirectedPath, v *Vertex, cost *int, onQ map[*Vertex]bool, queue *VertexQueue) {
+	for _, edge := range g.Adj(v) {
+		if path.DistTo[edge.To] > path.DistTo[edge.From]+edge.Weight {
+			path.DistTo[edge.To] = path.DistTo[edge.From] + edge.Weight
+			path.EdgeTo[edge.To] = edge
+			if !onQ[edge.To] {
+				queue.Push(edge.To)
+				onQ[edge.To] = true
+			}
+		}
+		*cost++
+		if *cost%g.V == 0 {
+			g.findNegativeCycle()
+		}
+	}
+}
+
+// 检查和查找负环的相关函数.
+func (g *EdgeWeightedDigraph) findNegativeCycle() {
+
+}
+func (g *EdgeWeightedDigraph) hasCycle() bool {
+	return false
+}
+func (g *EdgeWeightedDigraph) NegativeCycle() []*Vertex {
+	return nil
 }

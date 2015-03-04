@@ -36,6 +36,7 @@ func NewGraph() *Graph {
 	}
 }
 
+// +gen queue
 // vertex is a vertex(node) in graph
 type Vertex struct {
 	Id  string //for debug
