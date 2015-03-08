@@ -93,3 +93,40 @@ func TestMSD(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func Test3QSort(t *testing.T) {
+	inputs := []string{
+		"edu.princeton.cs",
+		"com.apple",
+		"edu.princeton.cs",
+		"com.cnn",
+		"com.google",
+		"edu.uva.cs",
+		"edu.princeton.cs",
+		"edu.princeton.cs.www",
+		"edu.uva.cs",
+		"edu.uva.cs",
+		"edu.uva.cs",
+		"com.adobe",
+		"edu.princeton.ee",
+	}
+	Quick3string(inputs)
+	if !stringSliceEqual(inputs, []string{
+		"com.adobe",
+		"com.apple",
+		"com.cnn",
+		"com.google",
+		"edu.princeton.cs",
+		"edu.princeton.cs",
+		"edu.princeton.cs",
+		"edu.princeton.cs.www",
+		"edu.princeton.ee",
+		"edu.uva.cs",
+		"edu.uva.cs",
+		"edu.uva.cs",
+		"edu.uva.cs",
+	}) {
+		t.Log(inputs)
+		t.Fail()
+	}
+}

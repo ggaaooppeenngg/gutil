@@ -1,5 +1,7 @@
 package container
 
+import ()
+
 // 代表一个字符集合的字母表
 // 使用字母表作映射可以使得代码更加紧凑,因为对应的数字可以直接作为下标
 // 有时候连图也不要,直接一个数组就可以解决.
@@ -141,4 +143,44 @@ func charAt(s string, d int) int {
 	} else {
 		return -1
 	}
+}
+
+// 3-way string quicksort.
+func Quick3string(strs []string) {
+	sort3way(strs, 0, len(strs)-1, 0)
+}
+
+// internal implementation of 3-way string quicksort.
+func sort3way(strs []string, lo int, hi int, d int) {
+	if hi <= lo {
+		return
+	}
+	lt := lo
+	gt := hi
+	v := charAt(strs[lo], d)
+	// 每次划分三个区域,递归进行快排.
+	// 这就是三路快排.
+	for i := lo + 1; i <= gt; {
+		t := charAt(strs[i], d)
+		if t < v {
+			strs[lt], strs[i] = strs[i], strs[lt]
+			lt++
+			i++
+		}
+		if t > v {
+			strs[i], strs[gt] = strs[gt], strs[i]
+			gt--
+		}
+		if t == v {
+			i++
+		}
+
+	}
+
+	// strs[lo:lt] < v = strs[lt,gt+1] < strs[gt+1:hi]
+	sort3way(strs, lo, lt-1, d)
+	if v >= 0 {
+		sort3way(strs, lt, gt, d+1)
+	}
+	sort3way(strs, gt+1, hi, d)
 }
