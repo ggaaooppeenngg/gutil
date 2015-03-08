@@ -1,5 +1,16 @@
 package container
 
+// 字符串排序算法的比较
+// inplace 意思是说是否需要辅助函数转换
+// 算法						stable  inplace	running	time	extra space	sweet spot
+// insertion sort			yes		yes		N to N^2		1			small arrays,arrays in order
+// quicksort				no		yes		N(logN)^2		logN		general-purpose when space is tight
+// mergesort				yes		no		N(logN)^2		N			general-purpose stable srot
+// 3-way quicksort			no		yes		N to NlogN		logN		large numbers of equal keys
+// LSD string sort			yes		no		NW				N			short fixed-length strings
+// MSD string sort			yes		no		N to Nw			N+WR		random strings
+// 3-way string quicksort	no		yes		N to Nw			W+logN		general-purpose strings with long prefix matches
+
 import ()
 
 // 代表一个字符集合的字母表
@@ -20,7 +31,7 @@ func (apb Alphabet) ToIndex(c byte) int {
 	return 1
 }
 
-// 检查是否含有该字符
+// 检查是否含有该字
 func (apb Alphabet) Contains(c byte) bool {
 	return false
 }
@@ -146,6 +157,12 @@ func charAt(s string, d int) int {
 }
 
 // 3-way string quicksort.
+// 因为是递归调用,对于小的数组其实可以更换排序方式,
+// 这样就可以提高效率,而且这也是常见的方法.
+// 三路快排较于直接排序的好处就是,这些排序会把相同的前缀分类,
+// 而不是直接比较每个字符.
+// 随机化可以防止一些最坏现象,比如数组已经排好序或接近有序.
+// 但是随机化也是需要产生随机数的代价的,这个需要权衡.
 func Quick3string(strs []string) {
 	sort3way(strs, 0, len(strs)-1, 0)
 }
@@ -184,3 +201,5 @@ func sort3way(strs []string, lo int, hi int, d int) {
 	}
 	sort3way(strs, gt+1, hi, d)
 }
+
+// TODO: Tries tree.
