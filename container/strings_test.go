@@ -17,7 +17,7 @@ func stringSliceEqual(s1, s2 []string) bool {
 }
 
 func TestLSD(t *testing.T) {
-	result := LSD([]string{
+	inputs := []string{
 		"4PGC938",
 		"2IYE230",
 		"3CIO720",
@@ -31,8 +31,11 @@ func TestLSD(t *testing.T) {
 		"2RLA629",
 		"2RLA629",
 		"3ATW723",
-	}, 7)
-	stringSliceEqual(result, []string{
+	}
+
+	LSD(inputs, 7)
+
+	if !stringSliceEqual(inputs, []string{
 		"1ICK750",
 		"1ICK750",
 		"1OHV845",
@@ -46,5 +49,47 @@ func TestLSD(t *testing.T) {
 		"3CIO720",
 		"4JZY524",
 		"4PGC938",
-	})
+	}) {
+		t.Fail()
+	}
+}
+
+func TestMSD(t *testing.T) {
+	inputs := []string{
+		"she",
+		"sells",
+		"seashells",
+		"by",
+		"the",
+		"sea",
+		"shore",
+		"the",
+		"shells",
+		"she",
+		"sells",
+		"are",
+		"surely",
+		"seashells",
+	}
+
+	MSD(inputs)
+
+	if !stringSliceEqual(inputs, []string{
+		"are",
+		"by",
+		"sea",
+		"seashells",
+		"seashells",
+		"sells",
+		"sells",
+		"she",
+		"she",
+		"shells",
+		"shore",
+		"surely",
+		"the",
+		"the",
+	}) {
+		t.Fail()
+	}
 }

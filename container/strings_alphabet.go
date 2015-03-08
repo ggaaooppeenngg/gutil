@@ -50,13 +50,13 @@ func (apb Alphabet) ToString(indices []int) string {
 // 就能按照key作为索引的排序了. aux 可以用来表示一些辅助工具.空间规模是(8N+3R+1) R是字母表的基数.
 
 // LSD(leadt-significant-digit first) 字符串排序,也可以用于整数的排序.
-func LSD(strings []string, w int) []string {
+func LSD(strings []string, w int) {
 	// sort strings on leading len characters.
 	n := len(strings)
 	r := 256                 // radix
 	aux := make([]string, n) // axuilary slice
 	for d := w - 1; d >= 0; d-- {
-		count := make([]int, r+1) //后面要叠加,为了统一第一个空出来
+		count := make([]int, r+1) // 后面要叠加,为了统一第一个空出来
 		for i := 0; i < n; i++ {
 			count[strings[i][d]+1]++
 		}
@@ -64,14 +64,16 @@ func LSD(strings []string, w int) []string {
 			count[i+1] += count[i]
 		}
 		for i := 0; i < n; i++ {
+			// 前面加1,这里没有加1是因为要靠第一个元素应该在前一个元素紧跟最后面
+			// (比如第一个空元素是0,第一类元素是从0开始的,而不是count[1]对应的位置
 			aux[count[strings[i][d]]] = strings[i]
+			// 统计完一次加一次,分布完了以后就可以编程末尾的索引+1
 			count[strings[i][d]]++
 		}
 		for i := 0; i < n; i++ {
 			strings[i] = aux[i]
 		}
 	}
-	return nil
 }
 
 // Proof:
@@ -80,3 +82,63 @@ func LSD(strings []string, w int) []string {
 // 第i个key不同,按照key排序了,
 // 要么是相同,这个就是有序的了,这一定依靠
 // key索引实现的稳定性,不能对应的索引不总是相同的.
+
+// MSD(most significant first) 字符串排序.
+// MSD 的特点是需要一个多余的字符判断结束,另外本身count数组变
+// 索引数组又要多一个位置,所以整个的空间是R+2.
+// 这个算法分到后面很浪费空间,有时候字符串完全是一样的,就在重复分配空间
+func MSD(strs []string) {
+	var (
+		r   = 256                       //radix
+		m   = 0                         // cutoff for small subarrays 小的子部分就不用基数排序不然开销很大.
+		aux = make([]string, len(strs)) // auxiliary array for distribution.
+	)
+	sortMSD(strs, aux, 0, len(strs)-1, 0, m, r)
+}
+
+// sort strings from strs[lo] to strs[hi] at char d.
+// m is cutoff for small subarrays.
+// r is the alphabet radix.
+func sortMSD(strs []string, aux []string, lo int, hi int, d int, m int, r int) {
+	if hi <= lo+m {
+		//小规模的划分不用基数排序
+		return
+	}
+	// 这里比LSD多一个,是少于d的字符串统一在-1+2=1的位置,需要多出一个位置来记录小于的情况.
+	var count = make([]int, r+2) // compute the frequency,one for computing the indices,one for end of string.
+	// 统计频率的时候,
+	// 基数组的用法:
+	// count[1]是长度为d的字符串的数量
+	// count[2]-count[R+1]是对应的字母表的数量.
+	// count[0]没有用来计数,但是索引的时候作为开始起点(因为是0)
+	for i := lo; i <= hi; i++ {
+		count[charAt(strs[i], d)+2]++
+	}
+	// count[0]是起始索引,依次类推,要出现 R+1个
+	// 1到R是原本的,0是小于d的字符串的.
+	for i := 0; i < r+1; i++ {
+		count[i+1] += count[i]
+	}
+	for i := lo; i <= hi; i++ {
+		// 累加得出索引参考值之后 +2的地方是末尾,+1的地方是上一个的末尾,作为起点.
+		k := count[charAt(strs[i], d)+1]
+		aux[k] = strs[i] // -1+1=0表示
+		// 统计完一次加一次,分布完了以后就可以变成末尾的索引+1,也可以是下个字母的开始.
+		count[charAt(strs[i], d)+1]++
+	}
+	for i := lo; i <= hi; i++ {
+		strs[i] = aux[i-lo]
+	}
+	for i := 0; i < r; i++ {
+		sortMSD(strs, aux, lo+count[i], lo+count[i+1]-1, d+1, m, r)
+	}
+}
+
+// returns -1 if it is end of string.
+func charAt(s string, d int) int {
+	if d < len(s) {
+		return int(s[d])
+	} else {
+		return -1
+	}
+}
