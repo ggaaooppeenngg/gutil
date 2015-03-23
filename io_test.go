@@ -31,7 +31,14 @@ func sliceIntEqual(s1, s2 []int) bool {
 	}
 	return true
 }
-
+func TestRunOutput(t *testing.T) {
+	out, err := RunOutput("echo","Hello world")
+	if string(out) != "Hello world\n" || err != nil {
+		t.Log(err)
+		t.Log(string(out))
+		t.Fail()
+	}
+}
 func TestReverse(t *testing.T) {
 	var slice = []int{0, 1, 2}
 	var reverse = []int{2, 1, 0}

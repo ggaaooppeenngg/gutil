@@ -4,9 +4,23 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"reflect"
 )
+
+// Run execute the command and return the output.
+func RunOutput(args ...string) ([]byte, error) {
+	if len(args) == 0 {
+		return nil, fmt.Errorf("Need command name")
+	}
+	name := args[0]
+	if len(args) > 1 {
+		args = args[1:]
+	}
+	cmd := exec.Command(name,args...)
+	return cmd.CombinedOutput()
+}
 
 //Pwd retruns current working directory path as string.
 func Pwd() string {
