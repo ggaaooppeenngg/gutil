@@ -16,3 +16,10 @@ func TestAbs(t *testing.T) {
 		t.Fail()
 	}
 }
+func TestIndex(t *testing.T) {
+	var a = []int64{100, 1000, 10000}
+	if Index(a, 1000) != 1 {
+		t.Logf("%d", Index(a, 1000))
+		t.Fail()
+	}
+}
