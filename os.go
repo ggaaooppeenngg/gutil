@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"reflect"
 )
 
 // ordinary files mode.
@@ -20,12 +21,6 @@ const (
 func HomeDir() string {
 	u, _ := user.Current()
 	return u.HomeDir
-}
-
-//IsExist checks whether a file or directory exists.
-func IsExist(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil || os.IsExist(err)
 }
 
 // Copy file or directory.

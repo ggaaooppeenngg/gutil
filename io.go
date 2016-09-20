@@ -18,7 +18,7 @@ func RunOutput(args ...string) ([]byte, error) {
 	if len(args) > 1 {
 		args = args[1:]
 	}
-	cmd := exec.Command(name,args...)
+	cmd := exec.Command(name, args...)
 	return cmd.CombinedOutput()
 }
 
