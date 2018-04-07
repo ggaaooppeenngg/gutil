@@ -1,4 +1,4 @@
-package util
+package gutil
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ func sliceIntEqual(s1, s2 []int) bool {
 	return true
 }
 func TestRunOutput(t *testing.T) {
-	out, err := RunOutput("echo","Hello world")
+	out, err := RunOutput("echo", "Hello world")
 	if string(out) != "Hello world\n" || err != nil {
 		t.Log(err)
 		t.Log(string(out))
